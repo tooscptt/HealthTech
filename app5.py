@@ -6,342 +6,346 @@ import sqlite3
 import hashlib
 import datetime
 import random
-import PyPDF2 # Library baca PDF
-import io
 
-# --- 1. KONFIGURASI HALAMAN & CSS PRO ---
+# --- 1. KONFIGURASI HALAMAN & TEMA ---
 st.set_page_config(
-    page_title="MediCare AI Pro",
-    page_icon="🏥",
+    page_title="MediCare AI",
+    page_icon="🩺",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# CSS Custom untuk Tampilan Premium
+# CSS Custom: Tampilan Medis yang Bersih (Biru & Putih)
 st.markdown("""
 <style>
-    .stApp { background-color: #f0f4f8; }
-    h1, h2, h3 { color: #01579b; font-family: 'Helvetica', sans-serif; }
+    /* Background utama */
+    .stApp { background-color: #f0f7fa; }
     
-    /* Card Style */
-    div.stContainer {
-        background-color: white;
-        padding: 20px;
-        border-radius: 15px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        border: 1px solid #e1e4e8;
-    }
+    /* Font Judul */
+    h1, h2, h3 { color: #0277bd; font-family: 'Segoe UI', sans-serif; }
     
-    /* Tombol Custom */
+    /* Tombol Biru Keren */
     .stButton>button {
         background-color: #0288d1; color: white; border-radius: 10px;
-        height: 3em; width: 100%; font-weight: bold; border: none;
+        height: 3em; font-weight: bold; border: none; transition: 0.3s;
     }
-    .stButton>button:hover { background-color: #0277bd; }
+    .stButton>button:hover { background-color: #01579b; }
+
+    /* Kotak Mitos & Fakta */
+    .mitos-box {
+        background-color: #ffebee; padding: 15px; border-radius: 10px;
+        border-left: 5px solid #ef5350; margin-bottom: 10px;
+    }
+    .fakta-box {
+        background-color: #e8f5e9; padding: 15px; border-radius: 10px;
+        border-left: 5px solid #66bb6a; margin-bottom: 10px;
+    }
     
-    /* Highlight Pesan AI */
-    .stChatMessage[data-testid="stChatMessage"] {
-        background-color: #ffffff;
-        border: 1px solid #e0e0e0;
-        border-radius: 15px;
+    /* Card Container */
+    div[data-testid="stVerticalBlock"] > div[style*="flex-direction: column;"] > div[data-testid="stVerticalBlock"] {
+        background-color: white; padding: 20px; border-radius: 15px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 2. DATABASE MANAGEMENT ---
+# --- 2. DATABASE (SQLite) ---
 def init_db():
-    conn = sqlite3.connect('medicare_pro.db')
+    conn = sqlite3.connect('medicare.db')
     c = conn.cursor()
-    # User Table dengan tambahan kolom (Gol Darah, Umur)
+    # Tabel User
     c.execute('''CREATE TABLE IF NOT EXISTS users 
-                 (username TEXT PRIMARY KEY, password TEXT, nama TEXT, 
-                  gender TEXT, umur INTEGER, gol_darah TEXT)''')
-    # Consultation Table
+                 (username TEXT PRIMARY KEY, password TEXT, nama_lengkap TEXT)''')
+    # Tabel Riwayat Konsultasi
     c.execute('''CREATE TABLE IF NOT EXISTS consultations 
                  (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, 
-                  date TEXT, category TEXT, question TEXT, answer TEXT)''')
+                  date TEXT, question TEXT, answer TEXT)''')
     conn.commit()
     conn.close()
 
 def make_hashes(password):
     return hashlib.sha256(str.encode(password)).hexdigest()
 
-def register_user(user, pw, nama, gender, umur, goldar):
-    conn = sqlite3.connect('medicare_pro.db')
+def add_user(username, password, nama):
+    conn = sqlite3.connect('medicare.db')
     c = conn.cursor()
     try:
-        c.execute('INSERT INTO users VALUES (?,?,?,?,?,?)', 
-                  (user, make_hashes(pw), nama, gender, umur, goldar))
+        c.execute('INSERT INTO users(username, password, nama_lengkap) VALUES (?,?,?)', 
+                  (username, make_hashes(password), nama))
         conn.commit()
         return True
     except: return False
     finally: conn.close()
 
-def login_user(user, pw):
-    conn = sqlite3.connect('medicare_pro.db')
+def login_user(username, password):
+    conn = sqlite3.connect('medicare.db')
     c = conn.cursor()
-    c.execute('SELECT * FROM users WHERE username=? AND password=?', (user, make_hashes(pw)))
+    c.execute('SELECT * FROM users WHERE username =? AND password = ?', 
+              (username, make_hashes(password)))
     data = c.fetchall()
     conn.close()
     return data
 
-def save_history(user, cat, q, a):
-    conn = sqlite3.connect('medicare_pro.db')
+def save_consultation(username, question, answer):
+    conn = sqlite3.connect('medicare.db')
     c = conn.cursor()
     date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-    c.execute('INSERT INTO consultations(username, date, category, question, answer) VALUES (?,?,?,?,?)', 
-              (user, date, cat, q, a))
+    c.execute('INSERT INTO consultations(username, date, question, answer) VALUES (?,?,?,?)', 
+              (username, date, question, answer))
     conn.commit()
     conn.close()
 
-def get_history(user):
-    conn = sqlite3.connect('medicare_pro.db')
+def get_history(username):
+    conn = sqlite3.connect('medicare.db')
     c = conn.cursor()
-    c.execute('SELECT date, category, question, answer FROM consultations WHERE username=? ORDER BY id DESC', (user,))
+    c.execute('SELECT date, question, answer FROM consultations WHERE username=? ORDER BY id DESC', (username,))
     data = c.fetchall()
     conn.close()
     return data
 
+# Jalankan init database
 init_db()
 
-# --- 3. HELPER FUNCTIONS ---
-# Fungsi Baca PDF (Lab Report)
-def read_pdf(file):
-    pdf_reader = PyPDF2.PdfReader(file)
-    text = ""
-    for page in pdf_reader.pages:
-        text += page.extract_text()
-    return text
-
-# API Key Setup
+# --- 3. SETUP API KEY ---
 try:
     if "API_KEY" in st.secrets: api_key = st.secrets["API_KEY"]
     else: api_key = "MASUKKAN_KEY_LOKAL_JIKA_ADA"
-    if api_key and "MASUKKAN" not in api_key: genai.configure(api_key=api_key)
+    
+    if api_key and "MASUKKAN" not in api_key:
+        genai.configure(api_key=api_key)
 except: pass
 
-# --- 4. HALAMAN AUTH ---
-def auth_page():
-    c1, c2, c3 = st.columns([1, 1.5, 1])
-    with c2:
-        with st.container():
-            st.markdown("<h1 style='text-align: center; color: #0288d1;'>🏥 MediCare Pro</h1>", unsafe_allow_html=True)
-            st.markdown("<center>Asisten Medis Cerdas Berbasis AI</center>", unsafe_allow_html=True)
-            st.write("")
-            
-            tab1, tab2 = st.tabs(["🔓 LOGIN", "📝 DAFTAR"])
-            
-            with tab1:
-                with st.form("login"):
-                    u = st.text_input("Username")
-                    p = st.text_input("Password", type="password")
-                    if st.form_submit_button("Masuk"):
-                        data = login_user(u, p)
-                        if data:
-                            # Simpan info user ke session
-                            st.session_state.update({
-                                'logged_in': True, 'user': u, 'nama': data[0][2],
-                                'gender': data[0][3], 'umur': data[0][4], 'goldar': data[0][5]
-                            })
-                            st.rerun()
-                        else: st.error("Gagal Login")
-            
-            with tab2:
-                with st.form("register"):
-                    nu = st.text_input("Username Baru")
-                    np = st.text_input("Password", type="password")
-                    nn = st.text_input("Nama Lengkap")
-                    col_a, col_b = st.columns(2)
-                    ng = col_a.selectbox("Gender", ["Pria", "Wanita"])
-                    no = col_b.number_input("Umur", 10, 100, 25)
-                    nb = st.selectbox("Golongan Darah", ["A", "B", "AB", "O", "Tidak Tahu"])
-                    
-                    if st.form_submit_button("Daftar Akun"):
-                        if register_user(nu, np, nn, ng, no, nb): st.success("Berhasil! Silakan Login.")
-                        else: st.error("Username sudah ada.")
+# --- 4. LIST DATA EDUKASI (DATABASE KONTEN) ---
+# Tips Harian yang akan diacak
+DAILY_TIPS = [
+    "Minum air putih 2 liter sehari meningkatkan fokus & energi.",
+    "Kurangi konsumsi gula untuk kulit yang lebih awet muda.",
+    "Jalan kaki 30 menit sehari mengurangi risiko penyakit jantung.",
+    "Tidur cukup (7-8 jam) adalah kunci sistem imun yang kuat.",
+    "Makan sayuran hijau membantu detoksifikasi alami tubuh.",
+    "Hindari melihat layar HP 1 jam sebelum tidur agar nyenyak."
+]
 
-# --- 5. DASHBOARD & FITUR ---
+# --- 5. HALAMAN LOGIN & REGISTER ---
+def auth_page():
+    col1, col2, col3 = st.columns([1, 1.5, 1])
+    with col2:
+        with st.container(border=True):
+            st.markdown("<h1 style='text-align: center;'>🏥 MediCare AI</h1>", unsafe_allow_html=True)
+            st.markdown("<p style='text-align: center; color: grey;'>Asisten Kesehatan Keluarga Cerdas</p>", unsafe_allow_html=True)
+            
+            # Emoji Dokter Besar
+            st.markdown("<h1 style='text-align: center; font-size: 60px;'>👨‍⚕️</h1>", unsafe_allow_html=True)
+
+            tab_login, tab_daftar = st.tabs(["🔑 Masuk", "📝 Daftar Baru"])
+            
+            with tab_login:
+                with st.form("login_form"):
+                    username = st.text_input("Username")
+                    password = st.text_input("Password", type="password")
+                    if st.form_submit_button("Masuk Aplikasi", type="primary"):
+                        result = login_user(username, password)
+                        if result:
+                            st.session_state['logged_in'] = True
+                            st.session_state['username'] = username
+                            st.session_state['nama'] = result[0][2]
+                            st.rerun()
+                        else:
+                            st.error("Username atau Password Salah!")
+            
+            with tab_daftar:
+                with st.form("register_form"):
+                    new_user = st.text_input("Username Baru")
+                    new_nama = st.text_input("Nama Lengkap Anda")
+                    new_pass = st.text_input("Password Baru", type="password")
+                    if st.form_submit_button("Daftar Sekarang"):
+                        if add_user(new_user, new_pass, new_nama):
+                            st.success("Akun berhasil dibuat! Silakan Login.")
+                        else:
+                            st.error("Username sudah dipakai orang lain.")
+
+# --- 6. APLIKASI UTAMA (SETELAH LOGIN) ---
 def main_app():
-    # SIDEBAR PROFILE
+    # Sidebar Menu
     with st.sidebar:
-        st.image("https://cdn-icons-png.flaticon.com/512/387/387561.png", width=80)
-        st.markdown(f"### {st.session_state['nama']}")
-        st.caption(f"{st.session_state['gender']} | {st.session_state['umur']} Th | Gol: {st.session_state['goldar']}")
-        
-        menu = option_menu(
+        st.header(f"Hai, {st.session_state['nama'].split()[0]}!")
+        selected = option_menu(
             menu_title="Menu Utama",
-            options=["Beranda", "Chat Dokter AI", "Analisa Lab (PDF)", "Cari RS Terdekat", "Rekam Medis", "Logout"],
-            icons=["house", "chat-dots", "file-earmark-medical", "geo-alt", "folder2-open", "box-arrow-left"],
+            options=["Beranda Edukasi", "Konsultasi AI", "Cek Kesehatan", "Rekam Medis", "Logout"],
+            icons=["house-heart", "chat-square-text", "activity", "journal-medical", "box-arrow-left"],
             default_index=0,
             styles={"nav-link-selected": {"background-color": "#0288d1"}}
         )
+        st.markdown("---")
+        st.caption("© 2026 MediCare AI Project")
 
-    # --- MENU 1: BERANDA ---
-    if menu == "Beranda":
-        st.title(f"Selamat Pagi, {st.session_state['nama']}! ☀️")
-        st.write("Apa yang ingin Anda periksakan hari ini?")
+    # --- MENU 1: BERANDA (DASHBOARD EDUKASI) ---
+    if selected == "Beranda Edukasi":
+        st.markdown(f"# 👋 Selamat Datang, {st.session_state['nama']}!")
+        st.write("Semoga Anda sehat selalu. Simak informasi kesehatan hari ini.")
         st.divider()
 
-        # TIPS KESEHATAN (Random)
-        tips = [
-            "Kurangi gula! Konsumsi gula berlebih mempercepat penuaan kulit.",
-            "Jalan kaki 10.000 langkah setara membakar 400-500 kalori.",
-            "Dehidrasi ringan bisa menyebabkan sakit kepala dan sulit fokus.",
-            "Layar gadget memancarkan sinar biru (blue light) yang bisa ganggu tidur."
-        ]
-        st.info(f"💡 **Info Sehat:** {random.choice(tips)}")
+        # 1. KARTU TIPS HARIAN (RANDOM)
+        with st.container(border=True):
+            c_icon, c_text = st.columns([1, 8])
+            with c_icon:
+                st.markdown("<h1>💡</h1>", unsafe_allow_html=True)
+            with c_text:
+                st.subheader("Tips Sehat Hari Ini")
+                st.info(random.choice(DAILY_TIPS))
 
-        # NAVIGASI CEPAT (GRID)
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            with st.container():
-                st.markdown("### 🤒 Ada Keluhan?")
-                st.write("Konsultasikan gejala demam, batuk, atau nyeri.")
-                st.button("Mulai Chat", on_click=lambda: st.write("Klik menu 'Chat Dokter AI' di kiri"))
-        with c2:
-            with st.container():
-                st.markdown("### 📄 Cek Hasil Lab")
-                st.write("Punya file PDF hasil darah? Biar AI jelaskan.")
-                st.button("Upload PDF", on_click=lambda: st.write("Klik menu 'Analisa Lab' di kiri"))
-        with c3:
-            with st.container():
-                st.markdown("### 🚑 Darurat?")
-                st.write("Temukan IGD atau Apotek terdekat dari lokasi Anda.")
-                st.button("Cari Lokasi", on_click=lambda: st.write("Klik menu 'Cari RS' di kiri"))
-
-        # MITOS VS FAKTA
-        st.subheader("🧐 Mitos vs Fakta Medis")
-        col_m, col_f = st.columns(2)
-        with col_m:
-            st.error("❌ **MITOS:** Memakai kacamata minus membuat mata semakin rusak/ketergantungan.")
-        with col_f:
-            st.success("✅ **FAKTA:** Kacamata adalah alat bantu. Mata bertambah minus biasanya karena faktor genetik atau kebiasaan buruk (baca jarak dekat), bukan karena kacamata.")
-
-    # --- MENU 2: CHAT DOKTER AI ---
-    elif menu == "Chat Dokter AI":
-        st.title("🩺 Konsultasi Umum")
-        st.caption("AI kami dilatih untuk triase awal dan edukasi kesehatan.")
+        # 2. MITOS VS FAKTA (GRID LAYOUT)
+        st.subheader("🤔 Mitos atau Fakta?")
+        col_a, col_b = st.columns(2)
         
-        if "chat_history" not in st.session_state: st.session_state.chat_history = []
-        
-        # Tampilkan Chat
-        for chat in st.session_state.chat_history:
-            with st.chat_message(chat["role"]): st.markdown(chat["content"])
+        with col_a:
+            with st.container(border=True):
+                st.markdown("### 🥶 Tentang Masuk Angin")
+                st.markdown('<div class="mitos-box"><b>MITOS:</b> Kerokan bisa "mengeluarkan angin" jahat dari dalam tubuh.</div>', unsafe_allow_html=True)
+                st.markdown('<div class="fakta-box"><b>FAKTA:</b> Kerokan hanya melebarkan pembuluh darah kapiler, membuat tubuh terasa hangat dan rileks sementara.</div>', unsafe_allow_html=True)
 
-        # Input
-        user_in = st.chat_input("Contoh: Kepala saya pusing berputar dan mual...")
-        if user_in:
-            with st.chat_message("user"): st.write(user_in)
-            st.session_state.chat_history.append({"role":"user", "content":user_in})
-            
-            with st.spinner("Dokter AI sedang mengetik..."):
-                try:
-                    model = genai.GenerativeModel("gemini-flash-latest")
-                    # Prompt Personalisasi
-                    context = f"User bernama {st.session_state['nama']}, {st.session_state['gender']}, {st.session_state['umur']} tahun. "
-                    prompt = context + "Jawab sebagai dokter yang ramah. Berikan kemungkinan penyebab, saran penanganan di rumah, dan tanda bahaya. Jawab ringkas."
-                    
-                    response = model.generate_content(prompt + user_in)
-                    reply = response.text
-                    
-                    with st.chat_message("assistant"): st.markdown(reply)
-                    st.session_state.chat_history.append({"role":"assistant", "content":reply})
-                    save_history(st.session_state['user'], "Umum", user_in, reply)
-                except Exception as e: st.error("Koneksi Error.")
+        with col_b:
+            with st.container(border=True):
+                st.markdown("### 🚿 Mandi Malam")
+                st.markdown('<div class="mitos-box"><b>MITOS:</b> Mandi malam pasti menyebabkan penyakit rematik di tua nanti.</div>', unsafe_allow_html=True)
+                st.markdown('<div class="fakta-box"><b>FAKTA:</b> Tidak ada bukti medis langsung. Namun, air dingin bisa memicu nyeri sendi bagi yang <b>sudah punya</b> rematik.</div>', unsafe_allow_html=True)
 
-    # --- MENU 3: ANALISA LAB (FITUR BARU & CANGGIH) ---
-    elif menu == "Analisa Lab (PDF)":
-        st.title("🔬 Analisa Hasil Laboratorium")
-        st.write("Bingung baca kertas hasil cek darah? Upload fotonya (PDF) di sini.")
-        
-        uploaded_pdf = st.file_uploader("Upload File PDF Hasil Lab", type="pdf")
-        
-        if uploaded_pdf:
-            st.success("File berhasil diupload! AI sedang membaca...")
-            with st.spinner("Mengekstrak data medis..."):
-                try:
-                    # 1. Ekstrak Teks dari PDF
-                    text_data = read_pdf(uploaded_pdf)
-                    
-                    # 2. Kirim ke AI
-                    model = genai.GenerativeModel("gemini-flash-latest")
-                    prompt = """
-                    Kamu adalah dokter ahli patologi klinik. Berikut adalah teks dari hasil lab pasien.
-                    Tugasmu:
-                    1. Rangkum poin-poin yang TIDAK NORMAL (High/Low).
-                    2. Jelaskan dalam bahasa awam apa artinya.
-                    3. Berikan saran makanan/gaya hidup untuk memperbaiki nilai tersebut.
-                    
-                    Data Lab:
-                    """
-                    response = model.generate_content(prompt + text_data[:2000]) # Batasi karakter biar aman
-                    
-                    st.markdown("### 📋 Penjelasan Dokter AI")
-                    with st.container():
-                        st.markdown(response.text)
-                        
-                    save_history(st.session_state['user'], "Lab Analysis", "Upload PDF Lab", response.text)
-                    
-                except Exception as e:
-                    st.error(f"Gagal membaca PDF. Pastikan file tidak rusak. Error: {e}")
+        st.write("") 
 
-    # --- MENU 4: CARI RS (FITUR LOKASI) ---
-    elif menu == "Cari RS Terdekat":
-        st.title("🚑 Layanan Darurat")
-        st.write("Temukan fasilitas kesehatan di sekitar lokasi Anda saat ini.")
+        # 3. POJOK PENGETAHUAN
+        st.subheader("📚 Ensiklopedia Penyakit Umum")
+        with st.expander("🩸 Hipertensi (Darah Tinggi)"):
+            st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Sphygmomanometer_&_Cuff.jpg/320px-Sphygmomanometer_&_Cuff.jpg", width=200)
+            st.write("""
+            **Apa itu?** Tekanan darah tinggi yang sering disebut "The Silent Killer" karena jarang bergejala.
+            **Pencegahan:** Kurangi garam, olahraga rutin, hindari rokok.
+            """)
         
-        col1, col2 = st.columns(2)
-        with col1:
-            st.info("Klik tombol di bawah untuk membuka Google Maps.")
-            # Link HTML untuk membuka Google Maps search query
-            st.markdown("""
-            <a href="https://www.google.com/maps/search/rumah+sakit+terdekat/" target="_blank">
-                <button style="background-color:#d32f2f; color:white; padding:15px; border:none; border-radius:10px; width:100%; font-weight:bold; cursor:pointer;">
-                🏥 CARI RUMAH SAKIT TERDEKAT
-                </button>
-            </a>
-            """, unsafe_allow_html=True)
-            
-        with col2:
-            st.info("Cari Apotek 24 Jam")
-            st.markdown("""
-            <a href="https://www.google.com/maps/search/apotek+terdekat/" target="_blank">
-                <button style="background-color:#1976d2; color:white; padding:15px; border:none; border-radius:10px; width:100%; font-weight:bold; cursor:pointer;">
-                💊 CARI APOTEK TERDEKAT
-                </button>
-            </a>
-            """, unsafe_allow_html=True)
-            
-        st.write("")
-        with st.expander("📞 Nomor Darurat Indonesia"):
-            st.markdown("""
-            * **Ambulans:** 118 / 119
-            * **Polisi:** 110
-            * **Pemadam Kebakaran:** 113
-            * **SAR / Basarnas:** 115
+        with st.expander("🍭 Diabetes Melitus (Kencing Manis)"):
+            st.write("""
+            **Gejala 3P:** Sering Haus (Polidipsi), Sering Pipis (Poliuri), Cepat Lapar (Polifagi).
+            **Tips:** Kurangi nasi putih dan minuman manis kemasan. Perbanyak sayur.
             """)
 
-    # --- MENU 5: REKAM MEDIS ---
-    elif menu == "Rekam Medis":
-        st.title("📂 Riwayat Medis Digital")
-        history = get_history(st.session_state['user'])
+    # --- MENU 2: KONSULTASI AI ---
+    elif selected == "Konsultasi AI":
+        st.title("🩺 Dokter AI Pribadi")
+        st.caption("Tanyakan keluhan Anda atau upload foto (luka/obat/hasil lab).")
+
+        # Chat History Container
+        chat_box = st.container(height=400, border=True)
+        with chat_box:
+            if "messages" not in st.session_state: st.session_state.messages = []
+            for msg in st.session_state.messages:
+                with st.chat_message(msg["role"]):
+                    st.markdown(msg["content"])
+
+        # Input Area
+        with st.container(border=True):
+            c_up, c_in = st.columns([1, 5])
+            with c_up:
+                upl = st.file_uploader("📷", type=["jpg","png"], label_visibility="collapsed")
+            with c_in:
+                txt = st.chat_input("Tulis keluhan Anda di sini...")
+            
+            if upl: st.image(upl, width=100, caption="Foto Terlampir")
+
+        # Logika AI
+        if txt:
+            # Tampilkan user input
+            with chat_box:
+                with st.chat_message("user"):
+                    st.write(txt)
+                    if upl: st.image(upl, width=200)
+            st.session_state.messages.append({"role":"user", "content":txt})
+
+            # Proses AI
+            with st.spinner("Dokter AI sedang menganalisa..."):
+                try:
+                    model = genai.GenerativeModel("gemini-flash-latest")
+                    prompt_sys = f"Kamu adalah asisten dokter yang ramah. Jawablah keluhan pasien bernama {st.session_state['nama']}. Berikan diagnosa awal, saran perawatan di rumah, dan rekomendasi obat apotek (OTC). "
+                    content = [txt]
+                    
+                    if upl:
+                        content.append(PIL.Image.open(upl))
+                        prompt_sys += "Analisa gambar visual yang dikirim pasien ini. "
+                    
+                    content[0] = prompt_sys + content[0]
+                    
+                    response = model.generate_content(content)
+                    ai_reply = response.text
+
+                    with chat_box:
+                        with st.chat_message("assistant"):
+                            st.markdown(ai_reply)
+                    
+                    st.session_state.messages.append({"role":"assistant", "content":ai_reply})
+                    # Simpan ke Database
+                    save_consultation(st.session_state['username'], txt, ai_reply)
+
+                except Exception as e:
+                    st.error("Gagal terhubung ke AI. Cek koneksi internet.")
+
+    # --- MENU 3: CEK KESEHATAN ---
+    elif selected == "Cek Kesehatan":
+        st.title("🧮 Kalkulator Tubuh Sehat")
+        
+        tab_bmi, tab_bmr = st.tabs(["Berat Ideal (BMI)", "Kebutuhan Kalori (BMR)"])
+        
+        with tab_bmi:
+            with st.container(border=True):
+                st.subheader("Cek Body Mass Index (BMI)")
+                c1, c2 = st.columns(2)
+                bb = c1.number_input("Berat Badan (kg)", 30, 200, 60)
+                tb = c2.number_input("Tinggi Badan (cm)", 100, 250, 170)
+                
+                if st.button("Hitung BMI"):
+                    bmi = bb / ((tb/100)**2)
+                    st.metric("Skor BMI Anda", f"{bmi:.1f}")
+                    if bmi < 18.5: st.warning("Kategori: Kurus (Underweight)")
+                    elif 18.5 <= bmi < 25: st.success("Kategori: Normal (Ideal) ✅")
+                    elif 25 <= bmi < 30: st.warning("Kategori: Gemuk (Overweight)")
+                    else: st.error("Kategori: Obesitas ⚠️")
+
+        with tab_bmr:
+            with st.container(border=True):
+                st.subheader("Hitung Kalori Harian")
+                usia = st.slider("Usia Anda", 10, 90, 25)
+                gender = st.radio("Jenis Kelamin", ["Pria", "Wanita"])
+                
+                if st.button("Hitung Kebutuhan Kalori"):
+                    if gender == "Pria": cal = 88.36 + (13.4*bb) + (4.8*tb) - (5.7*usia)
+                    else: cal = 447.6 + (9.2*bb) + (3.1*tb) - (4.3*usia)
+                    st.info(f"Tubuh Anda membutuhkan sekitar **{int(cal)} kkal** per hari dalam kondisi istirahat.")
+
+    # --- MENU 4: REKAM MEDIS ---
+    elif selected == "Rekam Medis":
+        st.title("📂 Riwayat Konsultasi")
+        st.write("Daftar percakapan Anda dengan Dokter AI sebelumnya.")
+        
+        history = get_history(st.session_state['username'])
         
         if not history:
             st.info("Belum ada data konsultasi.")
         else:
             for item in history:
-                # item = (date, category, question, answer)
-                with st.expander(f"{item[1]} | {item[0]}"):
-                    st.caption(f"Keluhan/Input: {item[2]}")
-                    st.markdown(f"**Saran Dokter:**\n\n{item[3]}")
+                # item = (date, question, answer)
+                with st.expander(f"📅 {item[0]} - {item[1][:40]}..."):
+                    st.markdown(f"**Keluhan:** {item[1]}")
+                    st.markdown(f"**Saran Dokter:**\n\n{item[2]}")
+                    st.caption("Tersimpan aman di Database.")
 
     # --- LOGOUT ---
-    elif menu == "Logout":
-        st.session_state.logged_in = False
+    elif selected == "Logout":
+        st.session_state['logged_in'] = False
         st.rerun()
 
-# --- 6. MAIN RUN ---
+# --- 7. EKSEKUSI UTAMA ---
 if __name__ == "__main__":
-    if 'logged_in' not in st.session_state: st.session_state.logged_in = False
-    if st.session_state.logged_in: main_app()
-    else: auth_page()
+    if 'logged_in' not in st.session_state:
+        st.session_state['logged_in'] = False
+
+    if st.session_state['logged_in']:
+        main_app()
+    else:
+        auth_page()
