@@ -13,103 +13,91 @@ import time
 # --- 1. PAGE CONFIGURATION & METALLIC BLUE DESIGN SYSTEM ---
 st.set_page_config(
     page_title="MediCare Pro",
-    page_icon="⚕️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS: Light Blue Metallic, Glassmorphism, Ultra-Rounded
+# Custom CSS: Clean, Minimalist, Light Blue Metallic
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap');
 
-    /* Background & Font */
     html, body, [class*="css"], .stMarkdown, .stText {
         font-family: 'Plus Jakarta Sans', sans-serif !important;
     }
     .stApp { 
-        background-color: #f0f8ff !important; /* Alice Blue */
+        background-color: #f4f7fb !important; 
         color: #1b2a4e !important;
         overflow-x: hidden;
     }
     
-    /* Glow Orbs (Light Blue Theme) */
-    .glow-orb { position: fixed; border-radius: 50%; filter: blur(120px); opacity: 0.3; z-index: 0; pointer-events: none; }
+    .glow-orb { position: fixed; border-radius: 50%; filter: blur(140px); opacity: 0.2; z-index: 0; pointer-events: none; }
     .orb-1 { width: 50vw; height: 50vw; background: #56ccf2; top: -10%; left: -10%; }
     .orb-2 { width: 40vw; height: 40vw; background: #2f80ed; bottom: -10%; right: -10%; }
 
     .block-container { z-index: 10 !important; position: relative !important; }
 
-    /* Metallic Text (Blue Gradient) */
     h1, h2, h3 { 
-        background: linear-gradient(135deg, #56ccf2 0%, #2f80ed 100%);
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         font-weight: 800 !important; 
         letter-spacing: -0.5px;
     }
 
-    /* Glassmorphism Cards (Ultra-Rounded) */
     div[data-testid="metric-container"], div[data-testid="stForm"], div[data-testid="stTabs"], .css-card {
-        background: rgba(255, 255, 255, 0.7) !important;
-        backdrop-filter: blur(15px) !important;
-        -webkit-backdrop-filter: blur(15px) !important;
-        border: 1px solid rgba(86, 204, 242, 0.3) !important;
-        border-radius: 25px !important; 
-        padding: 20px !important;
-        box-shadow: 0 10px 30px rgba(47, 128, 237, 0.1), inset 0 0 15px rgba(255,255,255,0.5) !important;
-        transition: 0.4s ease !important;
+        background: rgba(255, 255, 255, 0.85) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border: 1px solid rgba(86, 204, 242, 0.2) !important;
+        border-radius: 16px !important; 
+        padding: 24px !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03) !important;
+        transition: 0.3s ease !important;
     }
     
     div[data-testid="metric-container"]:hover, .css-card:hover {
-        transform: translateY(-5px) !important; 
+        transform: translateY(-3px) !important; 
         border-color: #56ccf2 !important;
-        box-shadow: 0 15px 40px rgba(47, 128, 237, 0.15), inset 0 0 15px rgba(255,255,255,0.8) !important;
+        box-shadow: 0 8px 25px rgba(47, 128, 237, 0.1) !important;
     }
 
-    /* Seamless Sidebar */
     [data-testid="stSidebar"] {
-        background: rgba(255, 255, 255, 0.8) !important;
+        background: rgba(255, 255, 255, 0.95) !important;
         backdrop-filter: blur(20px) !important;
-        border-right: 1px solid rgba(86, 204, 242, 0.2) !important;
+        border-right: 1px solid rgba(0, 0, 0, 0.05) !important;
     }
 
-    /* Capsule Buttons */
     .stButton > button {
-        background: linear-gradient(135deg, #56ccf2 0%, #2f80ed 100%) !important;
+        background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%) !important;
         color: white !important; 
         border: none !important; 
-        border-radius: 50px !important;
-        padding: 10px 25px !important; 
-        font-weight: 700 !important;
-        box-shadow: 0 5px 20px rgba(86, 204, 242, 0.4) !important; 
+        border-radius: 8px !important;
+        padding: 10px 24px !important; 
+        font-weight: 600 !important;
         transition: 0.3s !important;
     }
     .stButton > button:hover { 
-        transform: scale(1.03) !important; 
-        box-shadow: 0 8px 25px rgba(86, 204, 242, 0.6) !important; 
+        transform: translateY(-2px) !important; 
+        box-shadow: 0 6px 15px rgba(30, 60, 114, 0.3) !important; 
     }
 
-    /* Capsule Inputs */
     .stTextInput input, .stNumberInput input, .stDateInput input, .stSelectbox > div > div {
-        border-radius: 30px !important;
-        border: 1px solid rgba(86, 204, 242, 0.3) !important;
-        background-color: rgba(255,255,255,0.8) !important;
+        border-radius: 8px !important;
+        border: 1px solid #e2e8f0 !important;
+        background-color: #ffffff !important;
         color: #1b2a4e !important;
         padding-left: 15px !important;
     }
     .stTextInput input:focus, .stNumberInput input:focus {
-        border-color: #56ccf2 !important;
-        box-shadow: 0 0 10px rgba(86, 204, 242, 0.3) !important;
+        border-color: #2a5298 !important;
+        box-shadow: 0 0 0 2px rgba(42, 82, 152, 0.2) !important;
     }
 
-    /* Metrics Styling */
-    [data-testid="stMetricValue"] { color: #2f80ed !important; font-weight: 900 !important; font-size: 2.5rem !important; }
+    [data-testid="stMetricValue"] { color: #1e3c72 !important; font-weight: 800 !important; font-size: 2.2rem !important; }
     
-    /* Myth/Fact Boxes */
-    .mitos { background: rgba(255, 235, 238, 0.8); padding: 15px; border-radius: 15px; border-left: 5px solid #ef5350; font-size: 0.95em; color: #c62828;}
-    .fakta { background: rgba(232, 245, 233, 0.8); padding: 15px; border-radius: 15px; border-left: 5px solid #66bb6a; font-size: 0.95em; color: #2e7d32;}
-
+    .clinical-note { background: #f8fafc; padding: 16px; border-radius: 8px; border-left: 4px solid #3b82f6; font-size: 0.95em; color: #334155; margin-bottom: 10px;}
+    
     #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
 </style>
 <div class="glow-orb orb-1"></div>
@@ -195,133 +183,127 @@ try:
     if "API_KEY" in st.secrets: api_key = st.secrets["API_KEY"]
     else: api_key = ""
     if api_key: genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-1.5-flash") # Upgrade to faster model
+    model = genai.GenerativeModel("gemini-1.5-flash") 
 except: pass
 
 # MOCK DATA
 HUGE_TIPS = [
     "Drinking water 20 minutes before meals helps control portion sizes.",
-    "Walking barefoot on grass (earthing) can reduce stress.",
-    "Replace white sugar with stevia or honey for more stable blood sugar.",
-    "Sleeping on your left side is good for acid reflux (GERD) sufferers.",
-    "Consuming cooked tomatoes is better than raw because the Lycopene content increases.",
-    "Weightlifting increases bone density and prevents osteoporosis.",
-    "Morning sun exposure (8-10 AM) is the best source of Vitamin D.",
-    "Reading a book before bed is better than scrolling your phone for sleep quality.",
-    "Washing hands with soap for 20 seconds kills 99% of germs.",
-    "Meditating 10 minutes a day can lower high blood pressure.",
-    "Eating slowly (chewing 32 times) helps digestion and prevents bloating."
-]
-
-MYTH_FACTS = [
-    {"title": "Catching a Cold", "m": "'Kerokan' (coin rubbing) expels wind from the body.", "f": "It only widens the capillary blood vessels in the skin."},
-    {"title": "Night Showers", "m": "Night showers cause rheumatism.", "f": "Cold water only triggers pain in sufferers who ALREADY have rheumatism."},
-    {"title": "Carrots & Eyes", "m": "Eating lots of carrots cures nearsightedness.", "f": "Vitamin A only maintains eye health, it cannot reduce nearsightedness."},
-    {"title": "Coffee & Heart", "m": "Drinking coffee definitely causes heart disease.", "f": "Moderate coffee consumption (1-2 cups) actually contains good antioxidants."},
-    {"title": "Vaccines", "m": "Vaccines cause autism in children.", "f": "Global research proves there is no connection between vaccines and autism."},
-    {"title": "Chocolate", "m": "Chocolate causes acne.", "f": "The sugar and milk in chocolate trigger acne, not the pure cocoa."}
+    "Walking barefoot on natural surfaces can reduce stress indicators.",
+    "Replacing refined sugar with natural alternatives stabilizes blood glucose.",
+    "A left-side sleeping position is recommended for acid reflux management.",
+    "Consuming cooked tomatoes increases Lycopene bioavailability.",
+    "Resistance training increases bone density and prevents osteoporosis.",
+    "Morning sun exposure regulates circadian rhythms and provides Vitamin D.",
+    "Reducing screen time before sleep significantly improves sleep quality."
 ]
 
 ENCYCLOPEDIA = {
     "Internal Medicine": {
-        "Diabetes": "High blood sugar levels because insulin is not working optimally. Symptoms: Frequent thirst, frequent urination.",
-        "Hypertension": "Blood pressure >140/90 mmHg. Often without symptoms but triggers strokes.",
-        "GERD": "Stomach acid rises into the esophagus. Avoid spicy food, coffee, and sleeping right after eating."
+        "Diabetes Mellitus": "A metabolic disease that causes high blood sugar. Symptoms include frequent urination and increased thirst.",
+        "Hypertension": "Consistently elevated blood pressure above 140/90 mmHg. A major risk factor for cardiovascular disease.",
+        "GERD": "Gastroesophageal reflux disease. A digestive disorder affecting the lower esophageal sphincter."
     },
     "Dermatology": {
-        "Eczema": "Itchy, red, dry skin inflammation. Usually due to allergies or stress.",
-        "Acne": "Blockage of hair follicles by oil and dead skin cells.",
-        "Tinea Versicolor": "Fungal infection on the skin. Itchy white/brown patches when sweating."
+        "Atopic Dermatitis": "A condition that makes skin red and itchy, often referred to as eczema.",
+        "Acne Vulgaris": "A skin condition that occurs when hair follicles become plugged with oil and dead skin cells.",
+        "Psoriasis": "A skin disease that causes red, itchy scaly patches, most commonly on the knees, elbows, trunk and scalp."
     },
     "Mental Health": {
-        "Anxiety": "Excessive anxiety that is difficult to control. Symptoms: Palpitations, cold sweat.",
-        "Burnout": "Physical & emotional exhaustion due to prolonged work stress.",
-        "Insomnia": "Difficulty falling asleep or staying asleep soundly."
+        "Generalized Anxiety Disorder": "Severe, ongoing anxiety that interferes with daily activities.",
+        "Major Depressive Disorder": "A mental health disorder characterized by persistently depressed mood or loss of interest.",
+        "Insomnia": "A sleep disorder that can make it hard to fall asleep, hard to stay asleep, or cause you to wake up too early."
     }
 }
 
 if 'show_login' not in st.session_state: st.session_state['show_login'] = False
 
-# --- 4. AUTHENTICATION FOCUS LAYER (POPUP STYLE) ---
+# --- 4. AUTHENTICATION FOCUS LAYER (CLEAN DESIGN) ---
 def render_auth_layer():
     st.markdown("<br><br>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns([1, 1.2, 1])
     with c2:
         st.markdown("<div style='text-align:center;'>", unsafe_allow_html=True)
-        st.markdown("<h2>🔐 Secure Authentication</h2>", unsafe_allow_html=True)
-        st.write("Please sign in or create an account to unlock Premium Medical Features.")
+        st.markdown("<h2>System Authentication</h2>", unsafe_allow_html=True)
+        st.markdown("<p style='color:#64748b;'>Secure portal for MediCare Pro users.</p>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
         
-        tab_login, tab_register = st.tabs(["Sign In", "Create Account"])
+        tab_login, tab_register = st.tabs(["Sign In", "Register New Account"])
         
         with tab_login:
             user = st.text_input("Username", key="log_user")
             pwd = st.text_input("Password", type="password", key="log_pass")
-            if st.button("Sign In ➔", use_container_width=True):
-                with st.spinner("Connecting..."):
+            if st.button("Authenticate", use_container_width=True):
+                with st.spinner("Verifying credentials..."):
                     time.sleep(1)
                     res = login_user(user, pwd)
                     if res:
                         st.session_state.update({'is_logged_in': True, 'username': user, 'nama': res[0][2]})
                         st.session_state['show_login'] = False
                         st.rerun()
-                    else: st.error("❌ Invalid username or password!")
-            st.caption("💡 **Demo:** Create an account first or use your registered account.")
+                    else: st.error("Authentication failed. Invalid credentials.")
+            st.caption("Demo Access: Create a new account in the Register tab to test.")
 
         with tab_register:
-            nu = st.text_input("Choose Username", key="reg_user")
-            nn = st.text_input("Full Name", key="reg_name")
+            nu = st.text_input("Desired Username", key="reg_user")
+            nn = st.text_input("Full Legal Name", key="reg_name")
             np = st.text_input("Create Password", type="password", key="reg_pass")
             cp = st.text_input("Confirm Password", type="password", key="reg_conf")
-            if st.button("Register Account ➔", use_container_width=True):
-                with st.spinner("Creating account..."):
+            if st.button("Create Account", use_container_width=True):
+                with st.spinner("Processing registration..."):
                     time.sleep(1)
-                    if np != cp: st.error("❌ Passwords do not match!")
-                    elif len(nu) < 3: st.error("❌ Username too short!")
+                    if np != cp: st.error("Verification failed: Passwords do not match.")
+                    elif len(nu) < 3: st.error("Validation failed: Username must be at least 3 characters.")
                     else:
                         if add_user(nu, np, nn):
-                            st.success("✅ Registration successful! Please Sign In.")
-                        else: st.error("❌ Username already exists.")
+                            st.success("Registration successful. Proceed to Sign In.")
+                        else: st.error("Registration failed: Username already allocated.")
         
         st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("❌ Close / Back", use_container_width=True):
+        if st.button("Cancel / Return to Dashboard", use_container_width=True):
             st.session_state['show_login'] = False
             st.rerun()
 
-# --- 5. 15+ EXCLUSIVE FEATURES (1 PAGE = 1 FEATURE) ---
+# --- 5. EXCLUSIVE FEATURES ---
 
 def f1_dashboard():
-    st.title("Main Health Dashboard")
+    st.title("Health Operations Dashboard")
     if not st.session_state.get('is_logged_in', False):
-        st.info("👀 **Guest Mode:** You are viewing the public dashboard preview.")
+        st.info("Guest View Mode Active. Limited functionality.")
     
-    st.write("Latest information for your healthy lifestyle.")
+    st.markdown("<p style='color:#64748b;'>Overview of your clinical and systemic metrics.</p>", unsafe_allow_html=True)
     
-    # A. DAILY TIPS
-    with st.container(border=True):
-        c1, c2 = st.columns([1, 8])
-        with c1: st.markdown("<h1 style='font-size:3rem; margin:0;'>💡</h1>", unsafe_allow_html=True)
-        with c2:
-            st.subheader("Tip of the Day")
-            st.write(random.choice(HUGE_TIPS))
-
+    # CLINICAL METRICS (Clean Look)
+    m1, m2, m3, m4 = st.columns(4)
+    with m1: st.metric("Overall Health Index", "92/100", "+2.5% vs Last Month")
+    with m2: st.metric("Active Modules", "14", "System Optimal")
+    with m3: st.metric("Upcoming Appointments", "0", "No actions required")
+    with m4: st.metric("Data Security", "Encrypted", "End-to-End")
+    
     st.markdown("<br>", unsafe_allow_html=True)
+    
+    # DASHBOARD CHARTS & INSIGHTS
+    col1, col2 = st.columns([1, 2])
+    
+    with col1:
+        st.subheader("Clinical Insight")
+        st.markdown(f"<div class='clinical-note'><strong>Daily Recommendation:</strong><br>{random.choice(HUGE_TIPS)}</div>", unsafe_allow_html=True)
+        
+        st.subheader("System Status")
+        st.markdown(f"<div class='clinical-note'><strong>AI Diagnostic Engine:</strong> Online<br><strong>Database Connection:</strong> Secure<br><strong>Last Sync:</strong> {datetime.datetime.now().strftime('%H:%M %p')}</div>", unsafe_allow_html=True)
 
-    # B. MYTH VS FACT
-    st.subheader("🧐 Myth vs Fact")
-    daily_myths = random.sample(MYTH_FACTS, 3)
-    cols = st.columns(3)
-    for idx, col in enumerate(cols):
-        with col:
-            with st.container(border=True):
-                st.markdown(f"**{daily_myths[idx]['title']}**")
-                st.markdown(f'<div class="mitos">❌ {daily_myths[idx]["m"]}</div>', unsafe_allow_html=True)
-                st.markdown("<div style='text-align:center; font-weight:bold; margin:5px 0;'>VS</div>", unsafe_allow_html=True)
-                st.markdown(f'<div class="fakta">✅ {daily_myths[idx]["f"]}</div>', unsafe_allow_html=True)
+    with col2:
+        st.subheader("Activity Overview (7 Days)")
+        # Generating clean mock data
+        chart_data = pd.DataFrame(
+            np.random.randint(4000, 10000, size=(7, 2)),
+            columns=['Steps Recorded', 'Active Calories Burned']
+        )
+        st.bar_chart(chart_data)
 
 def f2_ai_consult():
-    st.title("🤖 Dr. AI Consultant")
-    st.caption("Discuss your physical complaints here.")
+    st.title("Dr. AI Clinical Consultant")
+    st.caption("Advanced AI diagnostic preliminary support.")
     
     chat_box = st.container(height=400, border=True)
     with chat_box:
@@ -332,22 +314,22 @@ def f2_ai_consult():
     
     with st.container(border=True):
         c1, c2 = st.columns([1, 5])
-        with c1: upl = st.file_uploader("📷", type=["jpg","png"], label_visibility="collapsed")
-        with c2: txt = st.chat_input("Your complaint...")
-        if upl: st.image(upl, width=100, style={"border-radius":"10px"})
+        with c1: upl = st.file_uploader("Image Analysis", type=["jpg","png"], label_visibility="collapsed")
+        with c2: txt = st.chat_input("Input clinical symptoms or inquiries...")
+        if upl: st.image(upl, width=150, style={"border-radius":"8px"})
         
     if txt:
         with chat_box:
             with st.chat_message("user"): st.write(txt)
         st.session_state.msgs.append({"role":"user", "content":txt})
         
-        with st.spinner("Analyzing..."):
+        with st.spinner("Processing clinical data..."):
             try:
-                prompt = f"Answer as a friendly doctor for patient {st.session_state.get('nama', 'Guest')}. Give initial diagnosis & pharmacy drug suggestions in English. "
+                prompt = f"Respond as a professional medical doctor. Patient name: {st.session_state.get('nama', 'Patient')}. Provide a preliminary analysis based on the symptoms. Use professional medical terminology but keep it understandable. "
                 content = [txt]
                 if upl:
                     content.append(PIL.Image.open(upl))
-                    prompt += "Analyze this medical image. "
+                    prompt += "Analyze the provided medical visual. "
                 content[0] = prompt + content[0]
                 
                 resp = model.generate_content(content)
@@ -357,89 +339,89 @@ def f2_ai_consult():
                     with st.chat_message("assistant"): st.write(ai_reply)
                 st.session_state.msgs.append({"role":"assistant", "content":ai_reply})
                 save_consultation(st.session_state['username'], txt, ai_reply)
-            except Exception as e: st.error("AI Connection Error")
+            except Exception as e: st.error("Engine failure. Please verify connection.")
 
 def f3_bmi():
-    st.title("⚖️ BMI Smart Check")
-    st.write("Calculate your Body Mass Index.")
+    st.title("Body Mass Index Analysis")
+    st.write("Calculate and track your BMI index.")
     c_a, c_b = st.columns(2)
     bb = c_a.number_input("Weight (kg)", 30.0, 200.0, 60.0)
     tb = c_b.number_input("Height (cm)", 100.0, 250.0, 170.0)
-    if st.button("Calculate BMI"):
+    if st.button("Execute Calculation"):
         bmi = bb / ((tb/100)**2)
-        st.metric("BMI Score", f"{bmi:.1f}")
-        if bmi < 18.5: st.warning("Underweight")
-        elif 18.5 <= bmi < 25: st.success("Normal (Ideal)")
-        else: st.error("Overweight / Obese")
+        st.metric("Calculated BMI", f"{bmi:.2f}")
+        if bmi < 18.5: st.warning("Status: Underweight")
+        elif 18.5 <= bmi < 25: st.success("Status: Normal Weight")
+        else: st.error("Status: Overweight / Obese")
 
 def f4_hydration():
-    st.title("💧 Hydration Target")
-    st.write("Formula: 30ml x Body Weight")
-    bb = st.number_input("Enter your weight (kg)", 30.0, 200.0, 60.0)
-    if st.button("Calculate Water Needs"):
+    st.title("Hydration Target Tracker")
+    st.write("Calculate optimal daily fluid intake based on body mass.")
+    bb = st.number_input("Current Weight (kg)", 30.0, 200.0, 60.0)
+    if st.button("Calculate Requirement"):
         air = bb * 30
-        st.info(f"Your body needs a minimum of **{air} ml** (approx {round(air/250)} glasses) of water per day.")
+        st.markdown(f"<div class='clinical-note'><strong>Recommended Intake:</strong> {air} ml per day.</div>", unsafe_allow_html=True)
 
 def f5_mental_test():
-    st.title("🧠 Mental Health Screening")
-    st.write("Simple test (PHQ-2) to detect early stress/depression levels.")
-    st.warning("This test is not a medical diagnosis. Contact a psychologist if results are concerning.")
+    st.title("Psychological Screening (PHQ-2)")
+    st.write("Preliminary screening for depression indicators.")
+    st.caption("Note: This does not replace formal psychiatric evaluation.")
     
     with st.form("mental_test"):
-        opts = ["Never", "Several days", "More than a week", "Nearly every day"]
+        opts = ["Not at all", "Several days", "More than half the days", "Nearly every day"]
         q1 = st.selectbox("1. Over the last 2 weeks, how often have you been bothered by feeling down, depressed, or hopeless?", opts)
         q2 = st.selectbox("2. How often have you had little interest or pleasure in doing things?", opts)
-        q3 = st.selectbox("3. Have you felt tired or had little energy?", opts)
+        q3 = st.selectbox("3. Have you felt excessively tired or lacked energy?", opts)
         
-        if st.form_submit_button("View Results & Save"):
-            mapping = {"Never":0, "Several days":1, "More than a week":2, "Nearly every day":3}
+        if st.form_submit_button("Process Evaluation"):
+            mapping = {"Not at all":0, "Several days":1, "More than half the days":2, "Nearly every day":3}
             score = mapping[q1] + mapping[q2] + mapping[q3]
             
             st.divider()
-            st.metric("Your Stress Score", f"{score}/9")
+            st.metric("Evaluation Score", f"{score}/9")
             
             kategori = ""
             if score <= 2:
-                kategori = "Stable / Normal"
-                st.success(f"✅ **{kategori}**. Keep up your healthy lifestyle.")
+                kategori = "Nominal"
+                st.success(f"Result: {kategori}. No significant indicators detected.")
             elif score <= 5:
-                kategori = "Mild Stress"
-                st.warning(f"⚠️ **{kategori}**. Try resting, exercising, or talking to a friend.")
+                kategori = "Mild Indicators"
+                st.warning(f"Result: {kategori}. Monitor symptoms and consider stress management.")
             else:
-                kategori = "Depression Indication"
-                st.error(f"🚨 **{kategori}**. Consulting a professional is recommended.")
+                kategori = "Elevated Indicators"
+                st.error(f"Result: {kategori}. Clinical consultation recommended.")
             
             save_mental_test(st.session_state['username'], score, kategori)
 
 def f6_dictionary():
-    st.title("📚 Medical Dictionary")
-    st.write("Your pocket health dictionary.")
+    st.title("Medical Reference Database")
+    st.write("Access verified medical terminology and disease information.")
     
-    tab_dalam, tab_kulit, tab_jiwa = st.tabs(["Internal Medicine", "Dermatology", "Mental Health"])
+    tab_dalam, tab_kulit, tab_jiwa = st.tabs(["Internal Medicine", "Dermatology", "Psychiatry"])
     
     with tab_dalam:
         for k, v in ENCYCLOPEDIA["Internal Medicine"].items():
-            with st.expander(f"🩺 {k}"): st.write(v)
+            with st.expander(f"Reference: {k}"): st.write(v)
     with tab_kulit:
         for k, v in ENCYCLOPEDIA["Dermatology"].items():
-            with st.expander(f"🧴 {k}"): st.write(v)
+            with st.expander(f"Reference: {k}"): st.write(v)
     with tab_jiwa:
         for k, v in ENCYCLOPEDIA["Mental Health"].items():
-            with st.expander(f"🧠 {k}"): st.write(v)
+            with st.expander(f"Reference: {k}"): st.write(v)
 
 def f7_medical_records():
-    st.title("📂 Medical Records")
+    st.title("Patient Records")
     
-    tab_chat, tab_mental = st.tabs(["AI Chat History", "Mental Test History"])
+    tab_chat, tab_mental = st.tabs(["Diagnostic Queries", "Psychological Logs"])
     
     with tab_chat:
         hist = get_history_chat(st.session_state['username'])
         if hist:
             for h in hist:
-                with st.expander(f"🗨️ {h[0]} - {h[1][:30]}..."):
-                    st.write(f"**Q:** {h[1]}")
-                    st.write(f"**A:** {h[2]}")
-        else: st.info("No chat history yet.")
+                with st.expander(f"Query Log: {h[0]}"):
+                    st.write(f"**Input:** {h[1]}")
+                    st.write(f"**Output:** {h[2]}")
+        else: st.info("No records found in database.")
 
     with tab_mental:
         hist_m = get_history_mental(st.session_state['username'])
@@ -449,55 +431,56 @@ def f7_medical_records():
                     c_a, c_b = st.columns([1, 4])
                     with c_a: st.metric("Score", f"{m[1]}")
                     with c_b:
-                        st.write(f"**Date:** {m[0]}")
-                        st.write(f"**Status:** {m[2]}")
-        else: st.info("No mental test history yet.")
+                        st.write(f"**Timestamp:** {m[0]}")
+                        st.write(f"**Clinical Status:** {m[2]}")
+        else: st.info("No records found in database.")
 
 def f8_appointments():
-    st.title("📅 Appointments")
-    st.date_input("Schedule a visit with a doctor", datetime.datetime.now())
-    st.table(pd.DataFrame({"Doctor": ["Dr. Smith", "Dr. Jane"], "Date": ["Upcoming", "Completed"]}))
+    st.title("Appointment Scheduling")
+    st.date_input("Select proposed consultation date", datetime.datetime.now())
+    st.table(pd.DataFrame({"Practitioner": ["Dr. Smith, MD", "Dr. Jane, DO"], "Status": ["Scheduled", "Fulfilled"]}))
 
 def f9_medication():
-    st.title("💊 Medication Plan")
-    st.write("Track your daily pills.")
-    st.checkbox("Vitamin C - 08:00 AM", value=True)
-    st.checkbox("Omega 3 - 01:00 PM")
+    st.title("Pharmacology Tracker")
+    st.write("Active prescriptions and supplements.")
+    st.checkbox("Vitamin C 500mg - 08:00 AM", value=True)
+    st.checkbox("Omega 3 1000mg - 01:00 PM")
 
 def f10_lab_results():
-    st.title("🔬 Lab Results")
-    st.info("Upload or view your recent blood work and scans.")
-    st.file_uploader("Upload Lab PDF", type=["pdf"])
+    st.title("Laboratory Results")
+    st.info("Secure document upload for assay results.")
+    st.file_uploader("Upload PDF Document", type=["pdf"])
 
 def f11_telehealth():
-    st.title("📞 Telehealth Call")
-    st.image("https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800", caption="Connecting to Doctor...")
-    st.button("End Call", type="primary")
+    st.title("Telehealth Interface")
+    st.markdown("<div class='clinical-note'>System ready for secure video transmission. Waiting for practitioner connection.</div>", unsafe_allow_html=True)
+    st.button("Terminate Connection")
 
 def f12_activity():
-    st.title("🏃‍♂️ Activity Log")
-    st.metric("Steps Today", "8,432", "+1,200")
-    st.bar_chart({"Steps": [5000, 7000, 8432, 6000]})
+    st.title("Physical Activity Metrics")
+    st.metric("Daily Steps", "8,432", "+1,200 vs Average")
+    st.bar_chart({"Steps Recorded": [5000, 7000, 8432, 6000]})
 
 def f13_nutrition():
-    st.title("🥗 Nutrition Plan")
-    st.write("Log your daily meals.")
-    st.data_editor(pd.DataFrame({"Meal": ["Breakfast", "Lunch"], "Calories": [450, 600]}), use_container_width=True)
+    st.title("Nutritional Intake")
+    st.write("Caloric tracking module.")
+    st.data_editor(pd.DataFrame({"Meal Type": ["Breakfast", "Lunch"], "Calories (kcal)": [450, 600]}), use_container_width=True)
 
 def f14_hospital():
-    st.title("🏥 Find Hospital")
+    st.title("Facility Locator")
+    st.write("Proximity map for affiliated healthcare facilities.")
     st.map(pd.DataFrame(np.random.randn(5, 2) / [50, 50] + [-6.8, 108.5], columns=['lat', 'lon']))
 
 def f15_insurance():
-    st.title("🛡️ Insurance Manager")
-    st.write("**Provider:** HealthCare Pro")
-    st.progress(70, "Annual Limit Used (70%)")
+    st.title("Policy Administration")
+    st.write("**Active Provider:** HealthCare Pro Corporate")
+    st.progress(70, "Annual Coverage Utilization (70%)")
 
 def f16_settings():
-    st.title("⚙️ Profile Settings")
-    st.text_input("Update Email")
-    st.toggle("Push Notifications", value=True)
-    st.button("Save Changes")
+    st.title("System Preferences")
+    st.text_input("Registered Email Address")
+    st.toggle("Enable System Notifications", value=True)
+    st.button("Update Configuration")
 
 # --- 6. MAIN ROUTING & SMART FOCUS LOGIC ---
 def main():
@@ -508,34 +491,35 @@ def main():
     with st.sidebar:
         if is_logged:
             user = st.session_state.get('nama', 'User')
-            st.markdown(f"<h2 style='text-align:center;'>Welcome,<br>{user}!</h2>", unsafe_allow_html=True)
-            if st.button("Logout", use_container_width=True):
+            st.markdown(f"<h3 style='text-align:center;'>{user}</h3>", unsafe_allow_html=True)
+            st.markdown("<p style='text-align:center; color:#64748b; font-size:0.8rem; margin-top:-10px;'>Authenticated User</p>", unsafe_allow_html=True)
+            if st.button("End Session", use_container_width=True):
                 st.session_state['is_logged_in'] = False
                 st.rerun()
         else:
             st.markdown("<h2 style='text-align:center;'>MediCare Pro</h2>", unsafe_allow_html=True)
-            st.write("<p style='text-align:center; color:#6c757d; font-size:0.9rem;'>Guest Mode</p>", unsafe_allow_html=True)
-            if st.button("🔐 Sign In / Register", use_container_width=True):
+            st.write("<p style='text-align:center; color:#64748b; font-size:0.9rem;'>Unauthenticated Access</p>", unsafe_allow_html=True)
+            if st.button("Sign In / Register", use_container_width=True):
                 st.session_state['show_login'] = True
                 st.rerun()
 
         st.divider()
         menu = option_menu(
-            menu_title="Core Modules",
+            menu_title="Navigation",
             options=[
                 "Dashboard", "AI Consult", "BMI Check", "Hydration", "Mental Test", 
                 "Dictionary", "Records", "Appointments", "Medication", "Lab Results", 
                 "Telehealth", "Activity Log", "Nutrition", "Find Hospital", "Insurance", "Settings"
             ],
             icons=[
-                "house", "robot", "calculator", "droplet", "brain", 
+                "grid", "cpu", "calculator", "droplet", "activity", 
                 "book", "folder", "calendar", "capsule", "file-medical", 
-                "camera-video", "activity", "egg-fried", "geo-alt", "shield-check", "gear"
+                "camera-video", "graph-up", "egg-fried", "geo-alt", "shield-check", "gear"
             ],
             default_index=0,
             styles={
-                "nav-link-selected": {"background": "linear-gradient(135deg, #56ccf2 0%, #2f80ed 100%)", "color": "white"},
-                "nav-link": {"color": "#1b2a4e", "font-weight": "600", "font-size": "0.9rem", "border-radius": "15px"}
+                "nav-link-selected": {"background": "linear-gradient(135deg, #2a5298 0%, #1e3c72 100%)", "color": "white"},
+                "nav-link": {"color": "#1b2a4e", "font-weight": "600", "font-size": "0.9rem", "border-radius": "8px"}
             }
         )
 
@@ -548,11 +532,11 @@ def main():
     if menu == "Dashboard": f1_dashboard()
     else:
         if not is_logged:
-            st.markdown("<br><br><br><h1 style='text-align:center;'>🔒 Access Restricted</h1>", unsafe_allow_html=True)
-            st.markdown("<p style='text-align:center; color:#6c757d;'>Please sign in to unlock this medical feature.</p>", unsafe_allow_html=True)
+            st.markdown("<br><br><br><h2 style='text-align:center;'>Access Denied</h2>", unsafe_allow_html=True)
+            st.markdown("<p style='text-align:center; color:#64748b;'>Authentication required to access this clinical module.</p>", unsafe_allow_html=True)
             c1, c2, c3 = st.columns([1, 0.5, 1])
             with c2:
-                if st.button("Sign In to Access ➔", use_container_width=True):
+                if st.button("Authenticate Now", use_container_width=True):
                     st.session_state['show_login'] = True
                     st.rerun()
         else:
